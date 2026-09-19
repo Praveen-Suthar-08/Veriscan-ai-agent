@@ -1,0 +1,52 @@
+{
+  "case_id": "dev_case_25_error_single",
+  "case_type": "error_single",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Aachal Sodhi",
+        "guardian_name": "Raghav Sodhi",
+        "dob": "1995-06-03",
+        "address": "No 72, Wali Street, Chinsurah - 560066",
+        "id_number": "IND-47376585",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Aachal Sodhi",
+        "guardian_name": "Raghav Sodhi",
+        "dob": "1995-06-06",
+        "id_number": "ROLL-801474",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Aachal Sodhi",
+        "address": "No 72, Wali Street, Chinsurah - 560066",
+        "id_number": "CON-9143903",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "dob",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "error",
+      "desc": "DOB mismatch: 1995-06-03 vs 1995-06-06"
+    }
+  ]
+}

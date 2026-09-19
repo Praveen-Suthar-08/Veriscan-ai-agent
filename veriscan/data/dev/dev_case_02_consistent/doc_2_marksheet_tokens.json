@@ -1,0 +1,167 @@
+[
+  {
+    "text": "MARKSHEET",
+    "conf": 0.96,
+    "bbox": [
+      50,
+      30,
+      200,
+      25
+    ],
+    "line_id": 0
+  },
+  {
+    "text": "Candidate Name:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      115,
+      120,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Arya",
+    "conf": 0.96,
+    "bbox": [
+      175,
+      115,
+      36,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Dhingra",
+    "conf": 0.96,
+    "bbox": [
+      217,
+      115,
+      63,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Roll Number:",
+    "conf": 0.96,
+    "bbox": [
+      340,
+      115,
+      120,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "ROLL-230889",
+    "conf": 0.96,
+    "bbox": [
+      470,
+      115,
+      99,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "Father Name:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      147,
+      120,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Adya",
+    "conf": 0.96,
+    "bbox": [
+      175,
+      147,
+      36,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Dhingra",
+    "conf": 0.96,
+    "bbox": [
+      217,
+      147,
+      63,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Date of Birth:",
+    "conf": 0.96,
+    "bbox": [
+      340,
+      147,
+      120,
+      20
+    ],
+    "line_id": 4
+  },
+  {
+    "text": "2004-05-26",
+    "conf": 0.96,
+    "bbox": [
+      470,
+      147,
+      90,
+      20
+    ],
+    "line_id": 4
+  },
+  {
+    "text": "Institution Code:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      179,
+      120,
+      20
+    ],
+    "line_id": 5
+  },
+  {
+    "text": "COLL-BLR-0941",
+    "conf": 0.96,
+    "bbox": [
+      175,
+      179,
+      117,
+      20
+    ],
+    "line_id": 5
+  },
+  {
+    "text": "Exam Year:",
+    "conf": 0.96,
+    "bbox": [
+      340,
+      179,
+      120,
+      20
+    ],
+    "line_id": 6
+  },
+  {
+    "text": "2022",
+    "conf": 0.96,
+    "bbox": [
+      470,
+      179,
+      36,
+      20
+    ],
+    "line_id": 6
+  }
+]

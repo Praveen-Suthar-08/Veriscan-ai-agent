@@ -1,0 +1,10 @@
+{
+  "case_id": "case_01_consistent",
+  "expected_triage": "GREEN",
+  "expected_risk_max": 0.15,
+  "required_mismatch_fields": [],
+  "forbidden_mismatch_fields": ["name", "guardian_name", "dob", "address", "id_number", "issue_date"],
+  "allowed_verdicts": ["MATCH", "MINOR_VARIANT"],
+  "max_findings": 0,
+  "notes": "Fully consistent baseline. Zero MISMATCH, zero LOW_CONFIDENCE. All identity fields match identically across all 3 documents."
+}

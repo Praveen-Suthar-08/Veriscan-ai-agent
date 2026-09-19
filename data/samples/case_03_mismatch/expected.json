@@ -1,0 +1,16 @@
+{
+  "case_id": "case_03_mismatch",
+  "expected_triage": "RED",
+  "expected_risk_min": 0.60,
+  "required_mismatch_fields": ["dob", "address"],
+  "forbidden_mismatch_fields": ["id_number", "issue_date"],
+  "required_verdicts": {
+    "dob": "MISMATCH",
+    "address": "MISMATCH"
+  },
+  "required_severities": {
+    "dob": "HIGH",
+    "address": "MEDIUM"
+  },
+  "notes": "DOB mismatch (20 vs 23 Sep 1998 = single digit typo) and address pincode mismatch (560004 vs 560504). Exactly these two MISMATCH findings. No ID_NUMBER or ISSUE_DATE findings."
+}

@@ -1,0 +1,11 @@
+{
+  "case_id": "case_02_benign",
+  "expected_triage": "GREEN",
+  "expected_risk_max": 0.20,
+  "required_mismatch_fields": [],
+  "forbidden_mismatch_fields": ["dob", "address", "id_number", "issue_date", "guardian_name"],
+  "allowed_verdicts": ["MATCH", "MINOR_VARIANT", "MISSING"],
+  "allowed_minor_variant_fields": ["name"],
+  "max_high_severity_findings": 0,
+  "notes": "Benign variants case. Name abbreviation 'K. Soni' vs 'Kala Soni' must be a MINOR_VARIANT, not MISMATCH. Different ID types (IND vs ROLL vs CON) must NOT be compared. Issue dates must NOT be compared."
+}

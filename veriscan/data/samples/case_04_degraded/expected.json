@@ -1,0 +1,9 @@
+{
+  "case_id": "case_04_degraded",
+  "expected_triage": "AMBER",
+  "expected_triage_options": ["GREEN", "AMBER"],
+  "forbidden_mismatch_fields": ["name", "guardian_name", "dob", "address", "id_number", "issue_date"],
+  "allowed_verdicts": ["MATCH", "MINOR_VARIANT", "LOW_CONFIDENCE", "MISSING"],
+  "max_mismatch_findings": 0,
+  "notes": "Degraded scan case (consistent identity). Poor scan quality may cause LOW_CONFIDENCE findings but must NOT produce MISMATCH findings since all identity markers are consistent. Triage GREEN or AMBER at most."
+}

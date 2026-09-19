@@ -1,0 +1,42 @@
+{
+  "case_id": "heldout_case_02_consistent",
+  "case_type": "consistent",
+  "is_heldout": true,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Krish Karpe",
+        "guardian_name": "Karan Karpe",
+        "dob": "2004-04-23",
+        "address": "No 64, Wason Ganj, Uluberia - 560044",
+        "id_number": "IND-95125977",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Krish Karpe",
+        "guardian_name": "Karan Karpe",
+        "dob": "2004-04-23",
+        "id_number": "ROLL-994343",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Krish Karpe",
+        "address": "No 64, Wason Ganj, Uluberia - 560044",
+        "id_number": "CON-5428914",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": []
+}

@@ -1,0 +1,15 @@
+{
+  "include": [
+    "veriscan",
+    "app",
+    "tests",
+    "eval"
+  ],
+  "pythonPath": "C:\\Users\\prave\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "extraPaths": [
+    "C:\\Users\\prave\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages",
+    "."
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false
+}

@@ -1,0 +1,52 @@
+{
+  "case_id": "dev_case_28_error_single",
+  "case_type": "error_single",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Vrishti Grewal",
+        "guardian_name": "Parth Grewal",
+        "dob": "2001-07-15",
+        "address": "No 25, Palan, Tadipatri - 560094",
+        "id_number": "IND-97705310",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Vrishti Grewal",
+        "guardian_name": "Parth Grewal",
+        "dob": "2001-07-18",
+        "id_number": "ROLL-777568",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Vrishti Grewal",
+        "address": "No 25, Palan, Tadipatri - 560094",
+        "id_number": "CON-2651177",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "dob",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "error",
+      "desc": "DOB mismatch: 2001-07-15 vs 2001-07-18"
+    }
+  ]
+}

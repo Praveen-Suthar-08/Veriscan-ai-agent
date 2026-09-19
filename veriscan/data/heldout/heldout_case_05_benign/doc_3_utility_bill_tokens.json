@@ -1,0 +1,178 @@
+[
+  {
+    "text": "ADDRESS PROOF",
+    "conf": 0.96,
+    "bbox": [
+      50,
+      30,
+      200,
+      25
+    ],
+    "line_id": 0
+  },
+  {
+    "text": "Consumer Name:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      145,
+      145,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Ekalinga",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      145,
+      72,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Mohanty",
+    "conf": 0.96,
+    "bbox": [
+      278,
+      145,
+      63,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Consumer No:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      171,
+      145,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "CON-2262382",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      171,
+      99,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "Service Address:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      197,
+      145,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "No",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      197,
+      20,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "155,",
+    "conf": 0.96,
+    "bbox": [
+      226,
+      197,
+      36,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Bobal",
+    "conf": 0.96,
+    "bbox": [
+      268,
+      197,
+      45,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Path,",
+    "conf": 0.96,
+    "bbox": [
+      319,
+      197,
+      45,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Jhansi",
+    "conf": 0.96,
+    "bbox": [
+      370,
+      197,
+      54,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "-",
+    "conf": 0.96,
+    "bbox": [
+      430,
+      197,
+      20,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "560055",
+    "conf": 0.96,
+    "bbox": [
+      456,
+      197,
+      54,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Bill Date:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      223,
+      145,
+      20
+    ],
+    "line_id": 4
+  },
+  {
+    "text": "2023-11-04",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      223,
+      90,
+      20
+    ],
+    "line_id": 4
+  }
+]

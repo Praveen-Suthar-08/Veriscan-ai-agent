@@ -1,0 +1,122 @@
+# VeriScan Configuration
+
+disclaimer: "This report is an automated pre-screening aid. It flags possible inconsistencies for human review and does not determine authenticity, eligibility, or approval. Final judgment rests with the human reviewer. Only synthetic sample data is used in this demonstration."
+
+ocr:
+  default_engine: "tesseract"  # "tesseract" or "easyocr"
+  min_confidence: 0.60       # Gating threshold: below this yields LOW_CONFIDENCE
+  retry_confidence: 0.70     # Critical fields below this trigger agent retry loop
+  dpi: 200                   # Rendering DPI for PDF documents
+
+thresholds:
+  name:
+    match: 0.92
+    minor_variant: 0.75
+  address:
+    match: 0.85
+    minor_variant: 0.70
+    weights:
+      pincode: 0.30
+      city: 0.20
+      street_locality: 0.30
+      house_number: 0.20
+  date:
+    match: 1.00              # Exact ISO match required
+
+severity:
+  name: "HIGH"
+  dob: "HIGH"
+  id_number: "HIGH"
+  guardian_name: "MEDIUM"
+  address: "MEDIUM"
+  pincode_only: "LOW"
+  missing_optional: "INFO"
+
+risk_weights:
+  HIGH: 1.0
+  MEDIUM: 0.6
+  LOW: 0.3
+  INFO: 0.0
+
+triage:
+  green_max: 0.20
+  amber_max: 0.60
+
+quality:
+  min_blur_laplacian: 100.0   # Below this is flagged as blurry
+  max_skew_degrees: 3.0       # Above this triggers deskew warning
+  min_dpi: 150                # Below this triggers low-res warning
+
+name_variants:
+  - ["mohammed", "muhammad", "mohd", "md"]
+  - ["venkatesh", "venkatesan"]
+  - ["lakshmi", "laxmi"]
+  - ["vijay", "vijaya"]
+  - ["prasad", "prasada"]
+  - ["suresh", "suresha"]
+  - ["chandra", "chandran"]
+  - ["subramanian", "subramaniam"]
+  - ["srinivasan", "srinivas"]
+  - ["agarwal", "agrawal", "aggarwal"]
+  - ["sharma", "sarma"]
+  - ["choudhary", "chaudhary", "chowdhury"]
+  - ["patel", "patil"]
+  - ["kumar", "kr"]
+  - ["singh", "sing"]
+  - ["devi", "dabi"]
+  - ["gupta", "gupt"]
+  - ["reddy", "reddi"]
+
+honorifics:
+  - "mr"
+  - "mrs"
+  - "ms"
+  - "shri"
+  - "shree"
+  - "smt"
+  - "dr"
+  - "prof"
+  - "kumari"
+  - "km"
+  - "master"
+
+relation_markers:
+  - "s/o"
+  - "so"
+  - "d/o"
+  - "do"
+  - "w/o"
+  - "wo"
+  - "c/o"
+  - "co"
+
+address_abbreviations:
+  rd: "road"
+  st: "street"
+  ave: "avenue"
+  nr: "near"
+  opp: "opposite"
+  apt: "apartment"
+  flt: "flat"
+  'no': "number"
+  'no.': "number"
+  '#': "number"
+  hno: "house number"
+  blr: "bengaluru"
+  bangalore: "bengaluru"
+  bom: "mumbai"
+  bombay: "mumbai"
+  cal: "kolkata"
+  calcutta: "kolkata"
+  madras: "chennai"
+  po: "post office"
+  dist: "district"
+  marg: "road"
+  ngr: "nagar"
+  soc: "society"
+  col: "colony"
+  bldg: "building"
+  sec: "sector"
+  ext: "extension"
+  cross: "cross"
+  main: "main"

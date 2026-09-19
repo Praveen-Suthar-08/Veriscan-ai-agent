@@ -1,0 +1,189 @@
+[
+  {
+    "text": "ADDRESS PROOF",
+    "conf": 0.96,
+    "bbox": [
+      50,
+      30,
+      200,
+      25
+    ],
+    "line_id": 0
+  },
+  {
+    "text": "Consumer Name:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      145,
+      145,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Yashawini",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      145,
+      81,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Seshadri",
+    "conf": 0.96,
+    "bbox": [
+      287,
+      145,
+      72,
+      20
+    ],
+    "line_id": 1
+  },
+  {
+    "text": "Consumer No:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      171,
+      145,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "CON-4860684",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      171,
+      99,
+      20
+    ],
+    "line_id": 2
+  },
+  {
+    "text": "Service Address:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      197,
+      145,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "No",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      197,
+      20,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "98,",
+    "conf": 0.96,
+    "bbox": [
+      226,
+      197,
+      27,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Soni",
+    "conf": 0.96,
+    "bbox": [
+      259,
+      197,
+      36,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Ganj,",
+    "conf": 0.96,
+    "bbox": [
+      301,
+      197,
+      45,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "South",
+    "conf": 0.96,
+    "bbox": [
+      352,
+      197,
+      45,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Dumdum",
+    "conf": 0.96,
+    "bbox": [
+      403,
+      197,
+      54,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "-",
+    "conf": 0.96,
+    "bbox": [
+      463,
+      197,
+      20,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "560009",
+    "conf": 0.96,
+    "bbox": [
+      489,
+      197,
+      54,
+      20
+    ],
+    "line_id": 3
+  },
+  {
+    "text": "Bill Date:",
+    "conf": 0.96,
+    "bbox": [
+      45,
+      223,
+      145,
+      20
+    ],
+    "line_id": 4
+  },
+  {
+    "text": "2023-11-04",
+    "conf": 0.96,
+    "bbox": [
+      200,
+      223,
+      90,
+      20
+    ],
+    "line_id": 4
+  }
+]

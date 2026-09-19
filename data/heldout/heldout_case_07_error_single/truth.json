@@ -1,0 +1,52 @@
+{
+  "case_id": "heldout_case_07_error_single",
+  "case_type": "error_single",
+  "is_heldout": true,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Vanya Sabharwal",
+        "guardian_name": "Abeer Sabharwal",
+        "dob": "1997-01-10",
+        "address": "No 22, Suri Ganj, Alwar - 560047",
+        "id_number": "IND-58024342",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Vanya Sabharwal",
+        "guardian_name": "Abeer Sabharwal",
+        "dob": "1997-01-13",
+        "id_number": "ROLL-320281",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Vanya Sabharwal",
+        "address": "No 22, Suri Ganj, Alwar - 560047",
+        "id_number": "CON-5186414",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "dob",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "error",
+      "desc": "DOB mismatch: 1997-01-10 vs 1997-01-13"
+    }
+  ]
+}

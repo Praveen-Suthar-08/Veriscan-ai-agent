@@ -1,0 +1,61 @@
+{
+  "case_id": "heldout_case_11_error_multi",
+  "case_type": "error_multi",
+  "is_heldout": true,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Kai Kannan",
+        "guardian_name": "Mugdha Kannan",
+        "dob": "2001-01-28",
+        "address": "No 68, Chokshi Marg, Avadi - 560061",
+        "id_number": "IND-36786211",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Kai Kannan",
+        "guardian_name": "Mugdha Kannan",
+        "dob": "2001-01-06",
+        "id_number": "ROLL-956253",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Kai Kannan",
+        "address": "No 68, Chokshi Marg, Avadi - 560561",
+        "id_number": "CON-8722606",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "dob",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "error",
+      "desc": "DOB mismatch: 2001-01-28 vs 2001-01-06"
+    },
+    {
+      "field": "address",
+      "docs": [
+        "doc_1",
+        "doc_3"
+      ],
+      "type": "error",
+      "desc": "Address mismatch: Pincode 560061 vs 560561"
+    }
+  ]
+}

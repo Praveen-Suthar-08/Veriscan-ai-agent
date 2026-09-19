@@ -1,0 +1,61 @@
+{
+  "case_id": "dev_case_11_benign",
+  "case_type": "benign",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Imaran Chana",
+        "guardian_name": "Siddharth Chana",
+        "dob": "2004-07-19",
+        "address": "No 104, Parmar Circle, Bhiwani - 560052",
+        "id_number": "IND-39436733",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "I. Chana",
+        "guardian_name": "Siddharth Chana",
+        "dob": "2004-07-19",
+        "id_number": "ROLL-245051",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Imaran Chana",
+        "address": "No 104, Parmar Circle, Bhiwani - 560052",
+        "id_number": "CON-9548432",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "name",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "benign",
+      "desc": "Initial expansion (R. Sharma vs Rohit Sharma)"
+    },
+    {
+      "field": "address",
+      "docs": [
+        "doc_1",
+        "doc_3"
+      ],
+      "type": "benign",
+      "desc": "Address abbreviations (Rd, Blr)"
+    }
+  ]
+}

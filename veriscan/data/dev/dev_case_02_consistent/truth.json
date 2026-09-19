@@ -1,0 +1,42 @@
+{
+  "case_id": "dev_case_02_consistent",
+  "case_type": "consistent",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Arya Dhingra",
+        "guardian_name": "Adya Dhingra",
+        "dob": "2004-05-26",
+        "address": "No 129, Bassi Road, Guwahati - 560006",
+        "id_number": "IND-81971316",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Arya Dhingra",
+        "guardian_name": "Adya Dhingra",
+        "dob": "2004-05-26",
+        "id_number": "ROLL-230889",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Arya Dhingra",
+        "address": "No 129, Bassi Road, Guwahati - 560006",
+        "id_number": "CON-7350753",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": []
+}

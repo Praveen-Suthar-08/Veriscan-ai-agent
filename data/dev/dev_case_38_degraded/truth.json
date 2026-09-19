@@ -1,0 +1,42 @@
+{
+  "case_id": "dev_case_38_degraded",
+  "case_type": "degraded",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Qasim Bava",
+        "guardian_name": "Varenya Bava",
+        "dob": "1999-04-22",
+        "address": "No 92, Maharaj Street, Bellary - 560092",
+        "id_number": "IND-42035886",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Qasim Bava",
+        "guardian_name": "Varenya Bava",
+        "dob": "1999-04-22",
+        "id_number": "ROLL-378517",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Qasim Bava",
+        "address": "No 92, Maharaj Street, Bellary - 560092",
+        "id_number": "CON-7640184",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": []
+}

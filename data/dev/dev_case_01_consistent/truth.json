@@ -1,0 +1,42 @@
+{
+  "case_id": "dev_case_01_consistent",
+  "case_type": "consistent",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Benjamin Ramakrishnan",
+        "guardian_name": "Zilmil Ramakrishnan",
+        "dob": "1998-06-04",
+        "address": "No 109, Gara Chowk, Cuttack - 560012",
+        "id_number": "IND-22981052",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Benjamin Ramakrishnan",
+        "guardian_name": "Zilmil Ramakrishnan",
+        "dob": "1998-06-04",
+        "id_number": "ROLL-476417",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Benjamin Ramakrishnan",
+        "address": "No 109, Gara Chowk, Cuttack - 560012",
+        "id_number": "CON-6770619",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": []
+}
