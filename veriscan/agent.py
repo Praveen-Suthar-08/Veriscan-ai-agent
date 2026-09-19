@@ -21,7 +21,7 @@ import cv2  # type: ignore
 
 from veriscan.schemas import (
     Document, DocumentField, Token, Finding, ConsistentItem,
-    CaseReport, ToolTraceStep, QualityMetrics
+    CaseReport, ToolTraceStep, QualityMetrics, EvidenceEntry
 )
 from veriscan.quality import assess_image_quality
 from veriscan.preprocess import (
@@ -142,6 +142,7 @@ class Orchestrator:
         """
         critical_fields = ["name", "dob", "address", "id_number"]
         updated_fields = dict(fields)
+        engine = self._get_engine()
 
         for cf in critical_fields:
             field_obj = updated_fields.get(cf)
@@ -153,7 +154,6 @@ class Orchestrator:
                 # Strategy 1: CLAHE enhancement
                 try:
                     enhanced = enhance_clahe(image)
-                    engine = self._get_engine()
                     retry_tokens = engine.extract_tokens(enhanced)
                     retry_fields = extract_fields_from_tokens(retry_tokens, doc_id)
 
@@ -244,6 +244,32 @@ class Orchestrator:
                         pairwise.setdefault(fn, []).append((doc_a, doc_b, pair_finding))
                     elif fa and not fb:
                         if is_field_expected_on_doc_type(fn, doc_b.doc_type):
+                            miss_evidence = [
+                                EvidenceEntry(
+                                    doc_id=doc_a.doc_id,
+                                    doc_name=doc_a.filename,
+                                    doc_type=doc_a.doc_type,
+                                    value_raw=fa.value_raw,
+                                    value_norm=fa.value_norm,
+                                    source_text_span=fa.source_text_span,
+                                    source_line_bbox=fa.source_line_bbox,
+                                    source_line_conf=fa.source_line_conf,
+                                    ocr_conf=fa.ocr_conf,
+                                    page=fa.page
+                                ),
+                                EvidenceEntry(
+                                    doc_id=doc_b.doc_id,
+                                    doc_name=doc_b.filename,
+                                    doc_type=doc_b.doc_type,
+                                    value_raw="[NOT PRESENT]",
+                                    value_norm="[NOT PRESENT]",
+                                    source_text_span=None,
+                                    source_line_bbox=None,
+                                    source_line_conf=None,
+                                    ocr_conf=1.0,
+                                    page=1
+                                )
+                            ]
                             miss = Finding(
                                 id=f"missing_{doc_a.doc_id}_{doc_b.doc_id}_{fn}",
                                 field=fn,
@@ -257,7 +283,8 @@ class Orchestrator:
                                 suggested_action=f"Verify if '{fn}' is expected in {doc_b.doc_id} ({doc_b.doc_type})",
                                 reasons=[f"'{fn}' present in {doc_a.doc_id} ({doc_a.doc_type}) but absent in {doc_b.doc_id} ({doc_b.doc_type})."],
                                 rule_ids=["RULE_FIELD_MISSING"],
-                                bboxes={doc_a.doc_id: fa.bbox, doc_b.doc_id: None}
+                                bboxes={doc_a.doc_id: fa.bbox, doc_b.doc_id: None},
+                                evidence=miss_evidence
                             )
                             pairwise.setdefault(fn, []).append((doc_a, doc_b, miss))
 
@@ -276,6 +303,7 @@ class Orchestrator:
             all_bboxes: Dict[str, Optional[List[int]]] = {}
             all_reasons: List[str] = []
             all_rids: List[str] = []
+            all_evidence_map: Dict[str, EvidenceEntry] = {}
             worst_verdict = "MATCH"
             worst_severity = "INFO"
             min_sim = 1.0
@@ -286,6 +314,15 @@ class Orchestrator:
                 all_vraw.update(pf.values_raw)
                 all_vnorm.update(pf.values_norm)
                 all_bboxes.update(pf.bboxes)
+                for ev in getattr(pf, "evidence", []):
+                    if ev.doc_id not in all_evidence_map or (ev.source_text_span and not all_evidence_map[ev.doc_id].source_text_span):
+                        # Ensure human-readable doc_name and doc_type are populated from doc container
+                        target_doc = doc_a if doc_a.doc_id == ev.doc_id else (doc_b if doc_b.doc_id == ev.doc_id else None)
+                        if target_doc:
+                            ev.doc_name = target_doc.filename
+                            ev.doc_type = target_doc.doc_type
+                        all_evidence_map[ev.doc_id] = ev
+
                 for r in pf.reasons:
                     if r not in all_reasons:
                         all_reasons.append(r)
@@ -305,6 +342,25 @@ class Orchestrator:
             all_docs = list(all_vraw.keys())
             merged_id = f"{fn}_{'_'.join(sorted(all_docs))}"
 
+            # Fallback for evidence if pairs didn't have entries
+            merged_evidence = [all_evidence_map[d] for d in all_docs if d in all_evidence_map]
+            if len(merged_evidence) < len(all_docs):
+                for doc_obj in documents:
+                    if doc_obj.doc_id in all_docs and doc_obj.doc_id not in all_evidence_map:
+                        f_obj = doc_obj.fields.get(fn)
+                        merged_evidence.append(EvidenceEntry(
+                            doc_id=doc_obj.doc_id,
+                            doc_name=doc_obj.filename,
+                            doc_type=doc_obj.doc_type,
+                            value_raw=f_obj.value_raw if f_obj else "[NOT PRESENT]",
+                            value_norm=f_obj.value_norm if f_obj else "[NOT PRESENT]",
+                            source_text_span=f_obj.source_text_span if f_obj else None,
+                            source_line_bbox=f_obj.source_line_bbox if f_obj else None,
+                            source_line_conf=f_obj.source_line_conf if f_obj else None,
+                            ocr_conf=f_obj.ocr_conf if f_obj else 1.0,
+                            page=f_obj.page if f_obj else 1
+                        ))
+
             if worst_verdict == "MATCH":
                 consistent_items.append(ConsistentItem(
                     id=merged_id, field=fn, docs=all_docs,
@@ -319,7 +375,8 @@ class Orchestrator:
                     verdict=worst_verdict, similarity=round(min_sim, 3),
                     severity=worst_severity, confidence=avg_conf,
                     reasons=all_reasons, rule_ids=all_rids,
-                    suggested_action=worst_action, bboxes=all_bboxes
+                    suggested_action=worst_action, bboxes=all_bboxes,
+                    evidence=merged_evidence
                 ))
 
         # Sort findings: HIGH first, then by confidence desc

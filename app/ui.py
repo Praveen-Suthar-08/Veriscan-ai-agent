@@ -7,6 +7,7 @@ import cv2  # type: ignore
 import numpy as np  # type: ignore
 from PIL import Image, ImageDraw, ImageFont  # type: ignore
 import streamlit as st  # type: ignore
+import streamlit.components.v1 as components  # type: ignore
 
 from veriscan.schemas import Finding, DISCLAIMER
 
@@ -480,6 +481,113 @@ CUSTOM_CSS = """
             align-items: flex-start !important;
         }
     }
+
+    /* Key Feature 7: Evidence Side-by-Side Table Styling */
+    .kf7-evidence-container {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+        margin-top: 6px;
+        margin-bottom: 10px;
+        width: 100%;
+        box-sizing: border-box;
+        scrollbar-width: thin;
+        scrollbar-color: #334155 rgba(0, 0, 0, 0.2);
+    }
+    .kf7-evidence-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    .kf7-evidence-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+    }
+    .kf7-evidence-container::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 3px;
+    }
+    .kf7-evidence-container::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+    .kf7-doc-card {
+        flex: 1 0 220px;
+        min-width: 220px;
+        box-sizing: border-box;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kf7-doc-header {
+        font-size: 11px;
+        font-weight: 700;
+        color: #E2E8F0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+    .kf7-doc-header span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .kf7-row-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94A3B8;
+        margin-bottom: 2px;
+    }
+    .kf7-raw-line {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 11px;
+        color: #CBD5E1;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 5px;
+        padding: 6px 8px;
+        line-height: 1.4;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+    .kf7-highlight {
+        background-color: rgba(245, 158, 11, 0.35);
+        color: #FDE68A;
+        font-weight: 700;
+        border-radius: 3px;
+        padding: 1px 3px;
+    }
+    .kf7-rule-chip {
+        display: inline-block;
+        background: rgba(99, 102, 241, 0.2);
+        color: #A5B4FC;
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 9px;
+        font-weight: 600;
+        margin-top: 4px;
+        word-break: break-word;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    .kf7-conf-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+    }
 </style>
 """
 
@@ -512,7 +620,7 @@ def render_sidebar_brand():
 
 def trigger_scroll_to_top():
     """Inject smooth scroll to top on screen change."""
-    st.components.v1.html("""
+    components.html("""
     <script>
         window.parent.document.querySelector('.main').scrollTo({top: 0, behavior: 'smooth'});
         window.scrollTo({top: 0, behavior: 'smooth'});

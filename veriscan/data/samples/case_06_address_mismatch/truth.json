@@ -1,0 +1,52 @@
+{
+  "case_id": "case_06_address_mismatch",
+  "case_type": "address_mismatch",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Vamakshi Madan",
+        "guardian_name": "Vincent Madan",
+        "dob": "1996-03-10",
+        "address": "No 45, Pillay Marg, Yamunanagar - 560063",
+        "id_number": "IND-20353622",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Vamakshi Madan",
+        "guardian_name": "Vincent Madan",
+        "dob": "1996-03-10",
+        "id_number": "ROLL-443245",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Vamakshi Madan",
+        "address": "No 43, Station Road, Mumbai - 40056",
+        "id_number": "CON-9286989",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "address",
+      "docs": [
+        "doc_1",
+        "doc_3"
+      ],
+      "type": "error",
+      "desc": "Address mismatch: No 45, Pillay Marg, Yamunanagar - 560063 vs No 43, Station Road, Mumbai - 40056"
+    }
+  ]
+}

@@ -79,6 +79,45 @@ def _calculate_bbox_union(tokens: List[Token]) -> Optional[List[int]]:
     return [x, y, w, h]
 
 
+def _get_line_context(
+    val_tokens: List[Token],
+    all_tokens: List[Token],
+    fallback_line_tokens: Optional[List[Token]] = None
+) -> Tuple[Optional[str], Optional[List[int]], Optional[float]]:
+    """
+    Given value tokens and all document tokens:
+    1. Find all tokens sharing the same line_id(s) as the value tokens.
+    2. Concatenate their text in reading order -> source_text_span.
+    3. Compute the union bounding box -> source_line_bbox.
+    4. Compute mean confidence of those tokens -> source_line_conf.
+    """
+    if not val_tokens:
+        if fallback_line_tokens:
+            sorted_line = sorted(fallback_line_tokens, key=lambda t: t.bbox[0])
+            span = " ".join([t.text for t in sorted_line]).strip()
+            bbox = _calculate_bbox_union(sorted_line)
+            conf = float(np.mean([t.conf for t in sorted_line])) if sorted_line else None
+            return (span if span else None), bbox, (round(conf, 3) if conf is not None else None)
+        return None, None, None
+
+    # Identify the line_ids of val_tokens
+    line_ids = {t.line_id for t in val_tokens if hasattr(t, "line_id")}
+    
+    # Collect all tokens from the document having any of these line_ids
+    line_tokens = [t for t in all_tokens if getattr(t, "line_id", None) in line_ids]
+    
+    if not line_tokens:
+        line_tokens = fallback_line_tokens or val_tokens
+
+    # Sort tokens in reading order (by y then x)
+    sorted_line = sorted(line_tokens, key=lambda t: (t.bbox[1] // 15, t.bbox[0]))
+    span = " ".join([t.text for t in sorted_line]).strip()
+    bbox = _calculate_bbox_union(sorted_line)
+    conf = float(np.mean([t.conf for t in sorted_line])) if sorted_line else None
+    
+    return (span if span else None), bbox, (round(conf, 3) if conf is not None else None)
+
+
 def extract_fields_from_tokens(
     tokens: List[Token],
     doc_id: str,
@@ -86,6 +125,7 @@ def extract_fields_from_tokens(
 ) -> Dict[str, DocumentField]:
     """
     Extract key document fields using spatial proximity and semantic regex rules.
+    Populates source_text_span, source_line_bbox, and source_line_conf for every extracted field.
     """
     fields: Dict[str, DocumentField] = {}
     if not tokens:
@@ -125,6 +165,7 @@ def extract_fields_from_tokens(
                     if matched_field and matched_field not in fields:
                         # Value is either to the right on the same line, or on the immediate next line below
                         val_tokens = line[token_idx + n:]
+                        target_line = line
                         # Clean separator tokens like ':' or '-'
                         while val_tokens and val_tokens[0].text in [":", "-", ";", "="]:
                             val_tokens = val_tokens[1:]
@@ -133,6 +174,7 @@ def extract_fields_from_tokens(
                             # Look on next line
                             next_line = lines[line_idx + 1]
                             val_tokens = next_line
+                            target_line = next_line
 
                         if val_tokens:
                             # Truncate if another label appears in val_tokens
@@ -149,6 +191,11 @@ def extract_fields_from_tokens(
                                 if val_raw:
                                     avg_conf = float(np.mean([vt.conf for vt in filtered_val_tokens]))
                                     bbox = _calculate_bbox_union(filtered_val_tokens)
+
+                                    # Compute source_text_span, source_line_bbox, source_line_conf
+                                    src_span, src_lbbox, src_lconf = _get_line_context(
+                                        filtered_val_tokens, tokens, fallback_line_tokens=target_line
+                                    )
 
                                     # Normalize according to field type
                                     if matched_field == "name" or matched_field == "guardian_name":
@@ -168,7 +215,10 @@ def extract_fields_from_tokens(
                                         ocr_conf=round(avg_conf, 3),
                                         bbox=bbox,
                                         method="label_proximity",
-                                        rules_applied=rules
+                                        rules_applied=rules,
+                                        source_text_span=src_span,
+                                        source_line_bbox=src_lbbox,
+                                        source_line_conf=src_lconf
                                     )
 
     # 2. Regex fallback for DOB if not captured
@@ -181,9 +231,9 @@ def extract_fields_from_tokens(
             raw_d = dm.group(1).strip()
             norm_d, rules = normalize_date(raw_d)
             if norm_d and "RULE_DATE_PARSE_FAILED" not in rules:
-                # Find matching token for bbox
                 matching_tokens = [t for t in tokens if t.text in raw_d or raw_d in t.text]
                 avg_conf = float(np.mean([t.conf for t in matching_tokens])) if matching_tokens else 0.85
+                src_span, src_lbbox, src_lconf = _get_line_context(matching_tokens, tokens)
                 fields["dob"] = DocumentField(
                     doc_id=doc_id,
                     name="dob",
@@ -192,7 +242,10 @@ def extract_fields_from_tokens(
                     ocr_conf=round(avg_conf, 3),
                     bbox=_calculate_bbox_union(matching_tokens),
                     method="regex",
-                    rules_applied=rules
+                    rules_applied=rules,
+                    source_text_span=src_span,
+                    source_line_bbox=src_lbbox,
+                    source_line_conf=src_lconf
                 )
                 break
 
@@ -201,7 +254,6 @@ def extract_fields_from_tokens(
         # Ensure document is not an academic transcript/marksheet by keyword check
         is_academic = any(k in full_text.lower() for k in ["marksheet", "statement of marks", "roll no", "examination board"])
         if not is_academic:
-            # Match 6-digit pincode that is NOT preceded by ROLL, ID, NO, etc.
             pin_matches = list(re.finditer(r"(?<![A-Za-z0-9\-_])([1-9][0-9]{5})\b", full_text))
             for pm in pin_matches:
                 pincode = pm.group(1)
@@ -210,7 +262,6 @@ def extract_fields_from_tokens(
                 if any(bad_prefix in prefix_ctx for bad_prefix in ["roll", "id-", "id ", "no.", "no ", "reg", "acc"]):
                     continue
 
-                # Take tokens around the pincode
                 pin_tokens = [t for t in tokens if pincode in t.text]
                 if pin_tokens:
                     pin_idx = tokens.index(pin_tokens[0])
@@ -219,7 +270,6 @@ def extract_fields_from_tokens(
                     addr_slice = tokens[start_idx:end_idx]
                     raw_addr = " ".join([t.text for t in addr_slice])
 
-                    # Require at least one address keyword or marker
                     addr_keywords = {
                         "road", "rd", "street", "st", "marg", "lane", "nagar", "layout",
                         "sector", "block", "flat", "apartment", "apt", "floor", "bldg",
@@ -230,6 +280,7 @@ def extract_fields_from_tokens(
                     has_addr_marker = any(k in raw_addr.lower().split() for k in addr_keywords) or any(k in raw_addr.lower() for k in ["road", "marg", "nagar", "street"])
                     if has_addr_marker:
                         norm_addr, rules = normalize_address(raw_addr)
+                        src_span, src_lbbox, src_lconf = _get_line_context(addr_slice, tokens)
                         fields["address"] = DocumentField(
                             doc_id=doc_id,
                             name="address",
@@ -238,19 +289,22 @@ def extract_fields_from_tokens(
                             ocr_conf=round(float(np.mean([t.conf for t in addr_slice])), 3),
                             bbox=_calculate_bbox_union(addr_slice),
                             method="regex_pin_context",
-                            rules_applied=rules
+                            rules_applied=rules,
+                            source_text_span=src_span,
+                            source_line_bbox=src_lbbox,
+                            source_line_conf=src_lconf
                         )
                         break
 
     # 4. Regex fallback for ID Number if not captured
     if "id_number" not in fields:
-        # Look for alphanumeric ID patterns like IND-9837482, DL-1420110012345, etc.
         id_match = re.search(r"\b([A-Z]{2,4}[-\s]?[0-9]{6,12})\b", full_text)
         if id_match:
             raw_id = id_match.group(1)
             norm_id, rules = normalize_id_number(raw_id)
             matching_tokens = [t for t in tokens if raw_id in t.text or any(part in t.text for part in raw_id.split())]
             avg_conf = float(np.mean([t.conf for t in matching_tokens])) if matching_tokens else 0.85
+            src_span, src_lbbox, src_lconf = _get_line_context(matching_tokens, tokens)
             fields["id_number"] = DocumentField(
                 doc_id=doc_id,
                 name="id_number",
@@ -259,7 +313,10 @@ def extract_fields_from_tokens(
                 ocr_conf=round(avg_conf, 3),
                 bbox=_calculate_bbox_union(matching_tokens),
                 method="regex_id",
-                rules_applied=rules
+                rules_applied=rules,
+                source_text_span=src_span,
+                source_line_bbox=src_lbbox,
+                source_line_conf=src_lconf
             )
 
     return fields

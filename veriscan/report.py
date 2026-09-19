@@ -6,16 +6,16 @@ Every report export embeds the mandatory human-in-the-loop disclaimer.
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from io import BytesIO
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
+from reportlab.lib.pagesizes import letter  # type: ignore
+from reportlab.lib import colors  # type: ignore
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
+from reportlab.platypus import (  # type: ignore
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
 )
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas  # type: ignore
 
 from veriscan.schemas import CaseReport, DISCLAIMER
 
@@ -29,7 +29,7 @@ class NumberedCanvas(canvas.Canvas):
 
     def showPage(self):
         self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        getattr(self, "_startPage")()
 
     def save(self):
         num_pages = len(self._saved_page_states)
@@ -51,7 +51,8 @@ class NumberedCanvas(canvas.Canvas):
         self.drawString(54, 20, disclaimer_text[110:])
 
         # Page number
-        page_str = f"Page {self._pageNumber} of {page_count}"
+        page_num = getattr(self, "_pageNumber", 1)
+        page_str = f"Page {page_num} of {page_count}"
         self.drawRightString(558, 20, page_str)
 
         # Header rule
@@ -262,45 +263,114 @@ def generate_pdf_report(report: CaseReport) -> bytes:
     story.append(Paragraph(report.narrative.replace("\n", "<br/>"), body_style))
     story.append(Spacer(1, 14))
 
-    # 4. Findings Table
+    # 4. Findings Table & Side-by-Side Evidence (Key Feature 7)
     story.append(Paragraph(f"Ranked Discrepancies ({len(report.findings)})", section_style))
-    table_rows = [
-        ["Field", "Verdict", "Severity", "Conf.", "Reason & Action"]
-    ]
-    for f in report.findings:
-        reasons_text = f"<b>Reason:</b> {'; '.join(f.reasons)}<br/><b>Action:</b> {f.suggested_action}"
-        table_rows.append([
-            f.field.upper(),
-            f.verdict,
-            f.severity,
-            f"{f.confidence:.2f}",
-            Paragraph(reasons_text, body_style)
-        ])
 
-    if len(table_rows) == 1:
-        table_rows.append(["None", "MATCH", "INFO", "1.00", "All fields consistent across submitted proofs."])
+    mono_style = ParagraphStyle(
+        "MonoStyle",
+        parent=styles["Normal"],
+        fontName="Courier",
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#0F172A")
+    )
+    bold_style = ParagraphStyle(
+        "BoldStyle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#0F172A")
+    )
 
-    findings_table = Table(table_rows, colWidths=[70, 75, 55, 45, 259])
-    findings_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#0B192C")),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('PADDING', (0, 0), (-1, -1), 5),
-    ]))
-    story.append(findings_table)
-    story.append(Spacer(1, 14))
+    if not report.findings:
+        no_findings_box = Table(
+            [[Paragraph("<font color='#059669'><b>Zero Discrepancies Detected</b> — All compared identity markers across proofs are consistent or explainable benign variants.</font>", body_style)]],
+            colWidths=[504]
+        )
+        no_findings_box.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#ECFDF5")),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor("#10B981")),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(no_findings_box)
+        story.append(Spacer(1, 14))
+    else:
+        for f in report.findings:
+            # Color header for finding
+            v_color = "#EF4444" if f.verdict == "MISMATCH" else ("#F59E0B" if f.verdict == "LOW_CONFIDENCE" else ("#06B6D4" if f.verdict == "MINOR_VARIANT" else "#64748B"))
+            heading_html = f"<b>{f.field.upper()}</b> &nbsp;&nbsp; <font color='white'><b>&nbsp;{f.verdict}&nbsp;</b></font> &nbsp;&nbsp; <font color='#64748B'>Severity: {f.severity} | Conf: {f.confidence:.2f}</font>"
+            
+            f_header = Table([[Paragraph(f"<b>{f.field.upper()}</b> &nbsp; <font size=8 color='{v_color}'>[{f.verdict} · {f.severity}]</font>", section_style)]], colWidths=[504])
+            f_header.setStyle(TableStyle([
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            
+            finding_elements: List[Any] = [f_header]
+
+            # Side-by-side Evidence Table
+            has_evidence = bool(f.evidence and len(f.evidence) >= 2)
+            if has_evidence and f.verdict in ["MISMATCH", "LOW_CONFIDENCE", "MINOR_VARIANT"]:
+                ev_list = f.evidence
+                n_docs = len(ev_list)
+                col_w = int(504 / max(1, n_docs))
+                col_widths = [col_w] * n_docs
+
+                ev_rows = [
+                    [Paragraph(f"<b>{ev.doc_name}</b><br/><font size=7 color='#64748B'>{ev.doc_type} (p.{ev.page})</font>", body_style) for ev in ev_list],
+                    [Paragraph(f"<b>Raw OCR line:</b><br/>{ev.source_text_span or '<i>Unavailable</i>'}", mono_style) for ev in ev_list],
+                    [Paragraph(f"<b>Extracted:</b> {ev.value_raw}", body_style) for ev in ev_list],
+                    [Paragraph(f"<b>Normalized:</b> <b>{ev.value_norm}</b>", bold_style) for ev in ev_list],
+                    [Paragraph(f"<b>OCR Conf:</b> {ev.ocr_conf:.0%}", body_style) for ev in ev_list]
+                ]
+
+                ev_table = Table(ev_rows, colWidths=col_widths)
+                ev_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('PADDING', (0, 0), (-1, -1), 4),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
+                ]))
+                finding_elements.append(ev_table)
+            else:
+                # Compact table for MATCH / MISSING or fallback
+                docs_header = list(f.values_norm.keys())
+                col_w = int(504 / max(1, len(docs_header)))
+                c_rows = [
+                    [Paragraph(f"<b>Document: {d}</b>", body_style) for d in docs_header],
+                    [Paragraph(f"Extracted: {f.values_raw.get(d, '—')}", body_style) for d in docs_header],
+                    [Paragraph(f"Normalized: <b>{f.values_norm.get(d, '—')}</b>", bold_style) for d in docs_header]
+                ]
+                c_table = Table(c_rows, colWidths=[col_w] * len(docs_header))
+                c_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+                    ('PADDING', (0, 0), (-1, -1), 4),
+                ]))
+                finding_elements.append(c_table)
+
+            # Details
+            cb = f.confidence_breakdown
+            cb_formula = f"Confidence: {f.confidence:.2f} (OCR A: {cb.ocr_a:.2f} × OCR B: {cb.ocr_b:.2f} × Signal: {cb.similarity_signal:.2f})"
+            detail_p = Paragraph(f"<b>Diagnosis:</b> {'; '.join(f.reasons)}<br/><b>Suggested Action:</b> {f.suggested_action}<br/><font size=7 color='#64748B'>{cb_formula}</font>", body_style)
+            finding_elements.append(Spacer(1, 4))
+            finding_elements.append(detail_p)
+            finding_elements.append(Spacer(1, 10))
+
+            story.append(KeepTogether(finding_elements))
+
+    story.append(Spacer(1, 10))
 
     # 5. Checked & Consistent List
     story.append(Paragraph(f"Checked and Consistent Fields ({len(report.consistent_items)})", section_style))
-    consistent_rows = [["Field", "Documents", "Status & Rationale"]]
+    consistent_rows: List[List[Any]] = [["Field", "Documents", "Status & Reconciliation Rationale"]]
     for c in report.consistent_items:
         consistent_rows.append([
             c.field.upper(),
             ", ".join(c.docs),
-            Paragraph("; ".join(c.reasons), body_style)
+            Paragraph(f"{'; '.join(c.reasons)} &nbsp; <i>({', '.join(c.rule_ids)})</i>", body_style)
         ])
     if len(consistent_rows) == 1:
         consistent_rows.append(["-", "-", "None checked"])

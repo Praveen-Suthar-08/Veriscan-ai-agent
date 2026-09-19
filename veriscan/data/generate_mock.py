@@ -324,7 +324,7 @@ def apply_degradations(img: Image.Image, level: int = 1) -> Image.Image:
 
     # 2. Rotation
     angle = random.choice([-1.0, 1.0]) * (1.5 * level)
-    res = res.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=(255, 255, 255))
+    res = res.rotate(angle, resample=Image.Resampling.BICUBIC, expand=False, fillcolor=(255, 255, 255))
 
     # 3. Add Gaussian noise
     arr = np.array(res, dtype=np.float32)
@@ -422,6 +422,29 @@ def generate_single_case(
                 "type": "error", "desc": f"Address mismatch: Pincode {pin} vs {wrong_pin}"
             })
 
+    elif case_type == "name_mismatch":
+        # Inject critical first name mismatch (e.g. Rohan vs Rohit)
+        alt_names = [n for n in ["Aarav", "Priya", "Vikram", "Sneha", "Kavita", "Rohan", "Nikhil", "Amit", "Rahul"] if n != first]
+        alt_first = alt_names[0] if alt_names else "Rohan"
+        alt_name = f"{alt_first} {last}"
+        doc_data["doc_2"]["name"] = alt_name
+        injected_changes.append({
+            "field": "name", "docs": ["doc_1", "doc_2"],
+            "type": "error", "desc": f"Name mismatch: {base_name} vs {alt_name}"
+        })
+
+    elif case_type == "address_mismatch":
+        # Inject genuine cross-city address discrepancy
+        alt_cities = [c for c in ["Mumbai", "Delhi", "Chennai", "Hyderabad", "Kolkata", "Pune"] if c != city]
+        alt_city = alt_cities[0] if alt_cities else "Mumbai"
+        alt_pin = f"400{random.randint(10, 99)}"
+        alt_addr = f"No {random.randint(10, 90)}, Station Road, {alt_city} - {alt_pin}"
+        doc_data["doc_3"]["address"] = alt_addr
+        injected_changes.append({
+            "field": "address", "docs": ["doc_1", "doc_3"],
+            "type": "error", "desc": f"Address mismatch: {base_addr} vs {alt_addr}"
+        })
+
     # Render images
     img1 = _render_id_card(doc_data["doc_1"], heldout=heldout)
     img2 = _render_marksheet(doc_data["doc_2"], heldout=heldout)
@@ -460,16 +483,18 @@ def generate_single_case(
 
 
 def generate_all_datasets() -> None:
-    """Generate dev dataset, held-out dataset, and 4 bundled UI demo cases."""
+    """Generate dev dataset, held-out dataset, and 6 bundled UI demo cases."""
     print("Generating VeriScan Synthetic Datasets...")
     random.seed(42)
 
-    # 1. Generate 4 Bundled UI Demo Cases
+    # 1. Generate 6 Bundled UI Demo Cases
     bundled_specs = [
         ("case_01_consistent", "consistent"),
         ("case_02_benign", "benign"),
         ("case_03_mismatch", "error_multi"),
-        ("case_04_degraded", "degraded")
+        ("case_04_degraded", "degraded"),
+        ("case_05_name_mismatch", "name_mismatch"),
+        ("case_06_address_mismatch", "address_mismatch")
     ]
     for cid, ctype in bundled_specs:
         cdir = SAMPLES_DIR / cid

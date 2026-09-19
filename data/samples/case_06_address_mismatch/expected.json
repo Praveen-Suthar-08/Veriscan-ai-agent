@@ -1,0 +1,14 @@
+{
+  "case_id": "case_06_address_mismatch",
+  "expected_triage": "AMBER",
+  "expected_risk_min": 0.30,
+  "required_mismatch_fields": ["address"],
+  "forbidden_mismatch_fields": ["name", "dob", "id_number", "issue_date"],
+  "required_verdicts": {
+    "address": "MISMATCH"
+  },
+  "required_severities": {
+    "address": "MEDIUM"
+  },
+  "notes": "Residential address and city discrepancy between primary ID card and utility service bill."
+}

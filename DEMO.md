@@ -27,6 +27,18 @@
 2. **Examine Ranked Flags:**
    - **DOB Mismatch (HIGH Severity):** Shows `2004-03-12` vs `2004-03-15`. Subtype correctly diagnosed as *Single Digit Typo*.
    - **Confidence Breakdown Bar:** Point to `0.89` overall confidence, decomposed into OCR token confidences and signal certainty.
+
+---
+**Key Feature 7 — Evidence view (compulsory, 30 s)**
+
+1. Click the DOB flag card to expand it.
+2. Point to the side-by-side table:
+   *"For every flag, the reviewer sees the document name, the exact OCR line the system read, the extracted value and the normalized value — side by side, one column per document."*
+3. Read aloud the raw OCR lines from both documents.
+4. Point to the highlight in the evidence visualizer on the right.
+5. *"No searching, no cross-referencing. The reviewer verifies in seconds."*
+---
+
 3. **Interactive Evidence Viewer:**
    - Click **"🔍 Highlight Evidence in Viewer"** on the DOB card.
    - The right-hand document viewer instantly highlights the exact physical bounding box in red on the source document image!

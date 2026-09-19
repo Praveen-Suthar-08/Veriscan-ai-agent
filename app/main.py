@@ -28,7 +28,7 @@ import numpy as np  # type: ignore
 from PIL import Image  # type: ignore
 import streamlit as st  # type: ignore
 
-from veriscan.schemas import CaseReport, Finding, DISCLAIMER
+from veriscan.schemas import CaseReport, Finding, DISCLAIMER, EvidenceEntry
 from veriscan.agent import Orchestrator
 from veriscan.narrative import generate_narrative
 from veriscan.llm import get_last_fallback_note
@@ -137,7 +137,7 @@ def mask_id_value(val: str, field_name: str, mask_enabled: bool = True) -> str:
         return val
     fn = field_name.lower()
     if any(k in fn for k in ["id", "roll", "consumer", "account", "ref", "aadhaar", "pan"]):
-        clean = str(val).strip()
+        clean = val.strip()
         if len(clean) > 4:
             return f"***{clean[-4:]}"
     return val
@@ -294,10 +294,24 @@ def main():
                     "desc": "Synthetic blur & tilt triggers progressive CLAHE + 2x upscale with safe gating",
                     "chip": '<span class="chip chip-LOW_CONFIDENCE">LOW_CONFIDENCE (Gate)</span>',
                     "docs": ["ID Card Scan", "Degraded Cam Scan"]
+                },
+                {
+                    "id": "case_05_name_mismatch",
+                    "title": "Case 05: Critical Name Discrepancy",
+                    "desc": "Applicant first-name conflict across ID Card & Marksheet (Tanvi vs Aarav)",
+                    "chip": '<span class="chip chip-MISMATCH">MISMATCH (Identity)</span>',
+                    "docs": ["ID Card", "Academic Marksheet", "Utility Bill"]
+                },
+                {
+                    "id": "case_06_address_mismatch",
+                    "title": "Case 06: Cross-City Address Conflict",
+                    "desc": "Conflicting residential domicile between ID Card (Yamunanagar) & Utility Bill (Mumbai)",
+                    "chip": '<span class="chip chip-MISMATCH">MISMATCH (Domicile)</span>',
+                    "docs": ["ID Card", "Academic Marksheet", "Utility Service Bill"]
                 }
             ]
 
-            # Render 4 Selectable Cards in 2x2 grid
+            # Render Selectable Cards in 2-column responsive grid
             for i in range(0, len(scenarios), 2):
                 c_a, c_b = st.columns(2)
                 for c_col, s in [(c_a, scenarios[i]), (c_b, scenarios[i+1])]:
@@ -330,7 +344,7 @@ def main():
 
             selected_case = st.session_state.get("selected_scenario")
             if not selected_case:
-                st.info("👆 Please click **'Select This Case'** on any of the 4 benchmark cards above to proceed.")
+                st.info("👆 Please click **'Select This Case'** on any of the benchmark scenario cards above to proceed.")
                 st.button("🚀 Load and Screen Selected Scenario", disabled=True, use_container_width=True)
             else:
                 sel_meta = next((s for s in scenarios if s["id"] == selected_case), None)
@@ -600,7 +614,7 @@ def main():
             return
 
         # FR7 Header Banner: Case ID, Timestamp, Documents count, OCR Engine, LLM Provider
-        cached_flag = st.session_state.get("is_cached_run", True) and not str(report.case_id).startswith("custom_case_")
+        cached_flag = st.session_state.get("is_cached_run", True) and not report.case_id.startswith("custom_case_")
         cached_badge_html = '<span style="background: rgba(99, 102, 241, 0.25); border: 1px solid #4F46E5; color: #A5B4FC; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">⚡ OCR from cache</span>' if cached_flag else ''
 
         st.markdown(f"""
@@ -617,6 +631,7 @@ def main():
         if last_note:
             st.info(f"ℹ️ {last_note}")
 
+        mask_on = st.session_state.get("mask_identifiers", True)
         # Top Triage & Risk Banner
         render_triage_banner(report.triage, report.risk_score, len(report.findings), is_cached=cached_flag)
 
@@ -655,8 +670,10 @@ def main():
 
                 # ── Clear highlight when a different case is loaded ──────────────
                 if st.session_state._last_highlighted_case != report.case_id:
-                    st.session_state.selected_finding_id = None
+                    st.session_state.selected_finding_id = report.findings[0].id if report.findings else None
                     st.session_state._last_highlighted_case = report.case_id
+                elif st.session_state.selected_finding_id is None and report.findings:
+                    st.session_state.selected_finding_id = report.findings[0].id
 
                 # ── Pre-initialise session-state notes from DB (only when key absent)
                 # Refreshes on every load so saved notes are visible immediately.
@@ -711,22 +728,105 @@ def main():
                     exp_label = f"#{idx+1} {f.field.upper()} — {f.severity} · {f.verdict}  [{dec_status}]"
                     with st.expander(exp_label, expanded=False):
 
-                        # Side-by-Side Raw vs Normalized Comparison
-                        st.markdown(
-                            "<div style='background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:8px 12px; margin-bottom:8px;'>",
-                            unsafe_allow_html=True
-                        )
-                        val_cols = st.columns(len(f.docs))
-                        for i, doc_id in enumerate(f.docs):
-                            with val_cols[i]:
-                                raw_v = f.values_raw.get(doc_id, "—")
-                                norm_v = f.values_norm.get(doc_id, "—")
-                                display_raw = mask_id_value(raw_v, f.field, mask_on)
-                                display_norm = mask_id_value(norm_v, f.field, mask_on)
-                                st.markdown(f"<span style='font-size:11px; color:#94A3B8;'>{doc_id}:</span>", unsafe_allow_html=True)
-                                st.markdown(f"<code style='color:#F8FAFC; font-weight:600;'>{display_raw}</code>", unsafe_allow_html=True)
-                                st.caption(f"Norm: {display_norm}")
-                        st.markdown("</div>", unsafe_allow_html=True)
+                        # Key Feature 7: Side-by-Side Evidence Table per Document
+                        ev_list = getattr(f, "evidence", [])
+                        if not ev_list or len(ev_list) < len(f.docs):
+                            # Fallback if finding.evidence not fully populated
+                            ev_list = []
+                            for d_id in f.docs:
+                                raw_v = f.values_raw.get(d_id, "—")
+                                norm_v = f.values_norm.get(d_id, "—")
+                                d_obj = next((doc for doc in report.documents if doc.doc_id == d_id), None)
+                                f_obj = d_obj.fields.get(f.field) if d_obj else None
+                                ev_list.append(EvidenceEntry(
+                                    doc_id=d_id,
+                                    doc_name=d_obj.filename if d_obj else d_id,
+                                    doc_type=d_obj.doc_type if d_obj else "unknown",
+                                    value_raw=raw_v,
+                                    value_norm=norm_v,
+                                    source_text_span=f_obj.source_text_span if f_obj else None,
+                                    source_line_bbox=f_obj.source_line_bbox if f_obj else None,
+                                    source_line_conf=f_obj.source_line_conf if f_obj else None,
+                                    ocr_conf=f_obj.ocr_conf if f_obj else 1.0,
+                                    page=f_obj.page if f_obj else 1
+                                ))
+
+                        # Render 5-row evidence table in a single non-overlapping horizontal flex container
+                        cards_html = []
+                        for ev in ev_list:
+                            display_raw = mask_id_value(ev.value_raw, f.field, mask_on)
+                            display_norm = mask_id_value(ev.value_norm, f.field, mask_on)
+
+                            # Row 1: Document header
+                            type_icons = {
+                                "id_card": "🪪",
+                                "marksheet": "📜",
+                                "utility_bill": "💡",
+                                "address_proof": "🏠",
+                                "bank_statement": "🏦",
+                                "application_form": "📝"
+                            }
+                            doc_icon = type_icons.get(ev.doc_type.lower(), "📄")
+
+                            # Row 2: Raw OCR line with highlighted extracted value
+                            raw_span_text = ev.source_text_span
+                            if raw_span_text:
+                                # Highlight extracted value in raw line
+                                target_sub = ev.value_raw.strip()
+                                if target_sub and target_sub in raw_span_text:
+                                    parts = raw_span_text.split(target_sub, 1)
+                                    raw_html = f"<span>{parts[0]}</span><mark class='kf7-highlight'>{target_sub}</mark><span>{parts[1]}</span>"
+                                else:
+                                    raw_html = f"<span>{raw_span_text}</span>"
+                            else:
+                                raw_html = f"<span style='font-style:italic; color:#64748B;'>Raw line unavailable — OCR confidence: {ev.ocr_conf:.0%}</span>"
+
+                            # Row 4: Normalized rule chip
+                            rule_chip_html = ""
+                            if ev.value_norm and ev.value_norm.strip() != ev.value_raw.strip() and f.rule_ids:
+                                rules_str = ", ".join(f.rule_ids[:2])
+                                rule_chip_html = f"<div style='margin-top: 3px;'><span class='kf7-rule-chip' title='Applied Normalization: {rules_str}'>→ {rules_str}</span></div>"
+
+                            # Row 5: OCR confidence pill
+                            conf_pct = int(round(ev.ocr_conf * 100))
+                            if conf_pct >= 80:
+                                c_bg, c_fg, c_border = "rgba(16,185,129,0.15)", "#34D399", "rgba(16,185,129,0.4)"
+                            elif conf_pct >= 60:
+                                c_bg, c_fg, c_border = "rgba(245,158,11,0.15)", "#FBBF24", "rgba(245,158,11,0.4)"
+                            else:
+                                c_bg, c_fg, c_border = "rgba(239,68,68,0.15)", "#F87171", "rgba(239,68,68,0.4)"
+
+                            conf_html = f"<span class='kf7-conf-pill' style='background:{c_bg}; color:{c_fg}; border:1px solid {c_border};'>{conf_pct}%</span>"
+
+                            card_html = (
+                                f'<div class="kf7-doc-card">'
+                                f'<div class="kf7-doc-header">'
+                                f'<span title="{ev.doc_name}">{doc_icon} {ev.doc_name}</span>'
+                                f'<span style="color: #94A3B8; font-size: 10px; white-space: nowrap;">{ev.doc_type} · p.{ev.page}</span>'
+                                f'</div>'
+                                f'<div>'
+                                f'<div class="kf7-row-label">Raw OCR line (Key Feature 7):</div>'
+                                f'<div class="kf7-raw-line">{raw_html}</div>'
+                                f'</div>'
+                                f'<div>'
+                                f'<div class="kf7-row-label">Extracted:</div>'
+                                f'<div style="font-size: 12px; font-weight: 500; color: #F8FAFC; word-break: break-word;">{display_raw}</div>'
+                                f'</div>'
+                                f'<div>'
+                                f'<div class="kf7-row-label">Normalized:</div>'
+                                f'<div style="font-size: 12px; font-weight: 700; color: #FFFFFF; word-break: break-word;">{display_norm}</div>'
+                                f'{rule_chip_html}'
+                                f'</div>'
+                                f'<div>'
+                                f'<div class="kf7-row-label">OCR Confidence:</div>'
+                                f'<div>{conf_html}</div>'
+                                f'</div>'
+                                f'</div>'
+                            )
+                            cards_html.append(card_html)
+
+                        all_cards_str = "".join(cards_html)
+                        st.markdown(f'<div class="kf7-evidence-container">{all_cards_str}</div>', unsafe_allow_html=True)
 
                         # Confidence Breakdown Bar
                         cb = f.confidence_breakdown
@@ -984,17 +1084,29 @@ def main():
                 st.info("No shared fields evaluated as matching across documents.")
             else:
                 for c in report.consistent_items:
+                    doc_chips = "".join([f"<span class='doc-tag'>{d}</span>" for d in c.docs])
+                    # Format a short version of the raw lines / normalized progression
+                    progression_parts = []
+                    for d_id in c.docs:
+                        d_raw = mask_id_value(c.values_raw.get(d_id, "—"), c.field, mask_on)
+                        progression_parts.append(f"<strong>{d_id}</strong>: <code>'{d_raw}'</code>")
+                    progression_str = " &nbsp;→&nbsp; ".join(progression_parts)
+                    norm_val_sample = mask_id_value(next(iter(c.values_norm.values()), "—"), c.field, mask_on)
+                    
                     st.markdown(f"""
                     <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <strong style="color: #34D399; font-size: 13px;">{c.field.upper()}</strong>
-                            <span class="chip chip-MATCH">CONSISTENT</span>
+                            <div>{doc_chips} <span class="chip chip-MATCH" style="margin-left: 6px;">CONSISTENT</span></div>
                         </div>
-                        <div style="font-size: 12px; color: #CBD5E1; margin: 4px 0;">
-                            <strong>Reconciliation Details:</strong> {'; '.join(c.reasons)}
+                        <div style="font-size: 12px; color: #E2E8F0; margin: 4px 0;">
+                            {progression_str} &nbsp;→&nbsp; <span style="color: #6EE7B7; font-weight: 700;">normalized to {norm_val_sample}</span>
                         </div>
-                        <div style="font-size: 11px; color: #94A3B8;">
-                            Applied Rules: <code>{', '.join(c.rule_ids)}</code>
+                        <div style="font-size: 11px; color: #CBD5E1; margin: 4px 0;">
+                            <strong>Reconciliation Rule:</strong> {'; '.join(c.reasons)}
+                        </div>
+                        <div style="font-size: 10px; color: #94A3B8;">
+                            Rule IDs: <code>{', '.join(c.rule_ids)}</code>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1102,12 +1214,13 @@ def main():
                 st.write("")
                 st.write("")
                 if st.button("📂 Open in Report", use_container_width=True):
-                    loaded_report = store.get_case(selected_audit_case)
-                    if loaded_report:
-                        st.session_state.current_report = loaded_report
-                        st.session_state.active_case_id = selected_audit_case
-                        st.session_state.nav_screen = "📑 Report"
-                        st.rerun()
+                    if selected_audit_case:
+                        loaded_report = store.get_case(selected_audit_case)
+                        if loaded_report:
+                            st.session_state.current_report = loaded_report
+                            st.session_state.active_case_id = selected_audit_case
+                            st.session_state.nav_screen = "📑 Report"
+                            st.rerun()
 
             if selected_audit_case:
                 audit_logs = store.get_audit_trail(selected_audit_case)

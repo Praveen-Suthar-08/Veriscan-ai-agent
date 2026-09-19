@@ -5,15 +5,8 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import json
-try:
-    import numpy as np  # type: ignore
-except ImportError:
-    np = None  # type: ignore
-
-try:
-    import cv2  # type: ignore
-except ImportError:
-    cv2 = None  # type: ignore
+import numpy as np  # type: ignore
+import cv2  # type: ignore
 
 from veriscan.schemas import Token
 

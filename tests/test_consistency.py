@@ -166,3 +166,40 @@ class TestRiskScoring:
         risk, triage = calculate_case_risk([f])
         assert risk > 0.60
         assert triage == "RED"
+
+
+class TestFindingEvidenceWiring:
+    """Step 2 tests: Wire evidence into every Finding (Key Feature 7)."""
+
+    def test_finding_has_evidence_entries(self):
+        fa = DocumentField(
+            doc_id="doc_1_id_card.png", name="dob",
+            value_raw="12/03/2004", value_norm="2004-03-12",
+            ocr_conf=0.96, source_text_span="DOB: 12/03/2004",
+            source_line_bbox=[180, 166, 250, 20], source_line_conf=0.96,
+            page=1
+        )
+        fb = DocumentField(
+            doc_id="doc_2_marksheet.png", name="dob",
+            value_raw="15/03/2004", value_norm="2004-03-15",
+            ocr_conf=0.94, source_text_span="Date of Birth: 15/03/2004",
+            source_line_bbox=[340, 147, 240, 20], source_line_conf=0.94,
+            page=1
+        )
+        finding = compare_document_fields("dob", fa, fb)
+
+        assert len(finding.evidence) >= 2
+        for ev in finding.evidence:
+            assert ev.doc_name is not None and len(ev.doc_name) > 0
+            assert ev.value_raw is not None
+            assert ev.value_norm is not None
+
+        assert finding.verdict == "MISMATCH"
+        assert any(ev.source_text_span is not None for ev in finding.evidence)
+        ev_a, ev_b = finding.evidence[0], finding.evidence[1]
+        assert ev_a.value_raw != ev_b.value_raw
+        assert ev_a.source_text_span != ev_b.source_text_span
+        assert ev_a.source_text_span is not None
+        assert ev_b.source_text_span is not None
+        assert "12/03/2004" in (ev_a.source_text_span or "")
+        assert "15/03/2004" in (ev_b.source_text_span or "")

@@ -1,0 +1,52 @@
+{
+  "case_id": "case_05_name_mismatch",
+  "case_type": "name_mismatch",
+  "is_heldout": false,
+  "watermark": "SAMPLE \u2013 NOT A REAL DOCUMENT",
+  "documents": {
+    "doc_1": {
+      "filename": "doc_1_id_card.png",
+      "type": "id_card",
+      "fields_truth": {
+        "name": "Tanvi Kohli",
+        "guardian_name": "Udarsh Kohli",
+        "dob": "1998-09-23",
+        "address": "No 20, Rege, Katni - 560094",
+        "id_number": "IND-91505558",
+        "issue_date": "2021-04-15"
+      }
+    },
+    "doc_2": {
+      "filename": "doc_2_marksheet.png",
+      "type": "marksheet",
+      "fields_truth": {
+        "name": "Aarav Kohli",
+        "guardian_name": "Udarsh Kohli",
+        "dob": "1998-09-23",
+        "id_number": "ROLL-895922",
+        "issue_date": "2022-06-20"
+      }
+    },
+    "doc_3": {
+      "filename": "doc_3_utility_bill.png",
+      "type": "address_proof",
+      "fields_truth": {
+        "name": "Tanvi Kohli",
+        "address": "No 20, Rege, Katni - 560094",
+        "id_number": "CON-6688936",
+        "issue_date": "2023-11-04"
+      }
+    }
+  },
+  "injected_changes": [
+    {
+      "field": "name",
+      "docs": [
+        "doc_1",
+        "doc_2"
+      ],
+      "type": "error",
+      "desc": "Name mismatch: Tanvi Kohli vs Aarav Kohli"
+    }
+  ]
+}

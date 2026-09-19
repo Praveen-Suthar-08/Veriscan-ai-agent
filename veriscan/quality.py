@@ -8,7 +8,7 @@ from typing import Tuple, List, Dict, Any
 import numpy as np
 import cv2
 from pathlib import Path
-import yaml
+import yaml  # type: ignore
 
 from veriscan.schemas import QualityMetrics
 
@@ -17,7 +17,9 @@ _CONFIG: Dict[str, Any] = {}
 if _CONFIG_PATH.exists():
     try:
         with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
-            _CONFIG = yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
+            if isinstance(data, dict):
+                _CONFIG = data
     except Exception:
         _CONFIG = {}
 

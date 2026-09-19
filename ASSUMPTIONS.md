@@ -65,3 +65,12 @@ This document records architectural, algorithmic, and engineering assumptions ma
 ## 5. Offline and Hackathon Demo Reliability
 - **Pre-cached OCR for Bundled Demo Cases:** 4 bundled cases (`consistent`, `benign_variants`, `dob_pincode_mismatch`, `degraded_scan`) include pre-computed OCR caches to guarantee instantaneous, glitch-free judge demonstrations.
 - **Offline Narrative Engine:** A deterministic narrative generator is the default narrator. Anthropic Claude LLM generation is optional and strictly restates structured findings when an API key is provided.
+
+---
+
+## 6. Key Feature 7: Evidence View Per Flag Architecture
+- **Literal Raw OCR Token Concatenation:** `source_text_span` is never paraphrased, summarized, or reconstructed from normalized values. It is derived strictly by grouping all tokens sharing the matching `line_id` and concatenating their text in physical reading order.
+- **Line Bounding Box Union:** `source_line_bbox` computes the exact outer rectangle covering all tokens on that OCR line, providing pixel-level coordinate grounding for visual highlighting and PDF section crops.
+- **Line-Level Confidence:** `source_line_conf` reflects the arithmetic mean confidence across all tokens on the source OCR line, exposing OCR degradation immediately to the human adjudicator.
+- **Side-by-Side Evidence Persistence:** Every `Finding` persists an `evidence: List[EvidenceEntry]` containing document names, types, raw lines, extracted values, normalized values, and bounding boxes across all involved documents.
+- **Audit Immutability & Masking:** ID numbers and identifiers remain masked (last 4 visible) throughout the side-by-side evidence UI and exports, while the statutory disclaimer is permanently anchored across every report surface.

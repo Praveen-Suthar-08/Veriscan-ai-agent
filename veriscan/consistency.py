@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Dict, List, Tuple, Any, Optional
 import re
 from pathlib import Path
-import yaml
+import yaml  # type: ignore
 
 try:
     from rapidfuzz import fuzz, distance
@@ -21,7 +21,7 @@ try:
 except ImportError:
     jellyfish = None
 
-from veriscan.schemas import Finding, ConfidenceBreakdown, DocumentField
+from veriscan.schemas import Finding, ConfidenceBreakdown, DocumentField, EvidenceEntry
 from veriscan.normalize import (
     normalize_name, normalize_date, normalize_address,
     extract_address_components, normalize_id_number
@@ -33,7 +33,9 @@ _CONFIG: Dict[str, Any] = {}
 if _CONFIG_PATH.exists():
     try:
         with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
-            _CONFIG = yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
+            if isinstance(data, dict):
+                _CONFIG = data
     except Exception:
         _CONFIG = {}
 
@@ -111,7 +113,7 @@ def compare_names(
             reasons.append("Initials match expanded name tokens.")
 
     # Calculate metrics
-    if fuzz and jellyfish:
+    if fuzz and distance and jellyfish:
         token_set_sim = fuzz.token_set_ratio(norm_a, norm_b) / 100.0
         lev_sim = 1.0 - (distance.Levenshtein.normalized_distance(norm_a, norm_b))
         jaro_sim = jellyfish.jaro_winkler_similarity(norm_a, norm_b)
@@ -389,6 +391,34 @@ def compare_document_fields(
 
     finding_id = f"finding_{field_a.doc_id}_{field_b.doc_id}_{fn}"
 
+    # Build evidence entries for every document involved (Compulsory Key Feature 7)
+    evidence_entries = [
+        EvidenceEntry(
+            doc_id=field_a.doc_id,
+            doc_name=field_a.doc_id,
+            doc_type=getattr(field_a, "doc_type", "unknown"),
+            value_raw=raw_a,
+            value_norm=norm_a,
+            source_text_span=field_a.source_text_span,
+            source_line_bbox=field_a.source_line_bbox,
+            source_line_conf=field_a.source_line_conf,
+            ocr_conf=field_a.ocr_conf,
+            page=field_a.page
+        ),
+        EvidenceEntry(
+            doc_id=field_b.doc_id,
+            doc_name=field_b.doc_id,
+            doc_type=getattr(field_b, "doc_type", "unknown"),
+            value_raw=raw_b,
+            value_norm=norm_b,
+            source_text_span=field_b.source_text_span,
+            source_line_bbox=field_b.source_line_bbox,
+            source_line_conf=field_b.source_line_conf,
+            ocr_conf=field_b.ocr_conf,
+            page=field_b.page
+        )
+    ]
+
     return Finding(
         id=finding_id,
         field=fn,
@@ -406,5 +436,6 @@ def compare_document_fields(
         bboxes={
             field_a.doc_id: field_a.bbox,
             field_b.doc_id: field_b.bbox
-        }
+        },
+        evidence=evidence_entries
     )

@@ -7,7 +7,7 @@ case_risk = 1 - prod(1 - severity_weight_i * finding_conf_i)
 from __future__ import annotations
 from typing import List, Dict, Any, Tuple
 from pathlib import Path
-import yaml
+import yaml  # type: ignore
 
 from veriscan.schemas import Finding
 
@@ -16,7 +16,9 @@ _CONFIG: Dict[str, Any] = {}
 if _CONFIG_PATH.exists():
     try:
         with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
-            _CONFIG = yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
+            if isinstance(data, dict):
+                _CONFIG = data
     except Exception:
         _CONFIG = {}
 

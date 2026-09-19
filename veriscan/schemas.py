@@ -42,6 +42,30 @@ class DocumentField(BaseModel):
     page: int = 1
     method: str = "rule"  # "rule", "regex", "retry", "llm_gap_fill"
     rules_applied: List[str] = Field(default_factory=list)
+    source_text_span: Optional[str] = None   # the raw OCR line(s) the value was read from
+    source_line_bbox: Optional[List[int]] = None  # bounding box of that line on the page
+    source_line_conf: Optional[float] = None  # mean OCR confidence of the source line tokens
+
+    def evidence_line(self, doc_name: Optional[str] = None) -> str:
+        """Format a single-line evidence summary for debugging, logging, and audits."""
+        name = doc_name or self.doc_id
+        if self.source_text_span:
+            return f"{name} | Raw: \"{self.source_text_span}\" | Extracted: {self.value_raw} | Normalized: {self.value_norm} | Conf: {self.ocr_conf:.2f}"
+        return f"{name} | Raw line unavailable (OCR conf: {self.ocr_conf:.2f})"
+
+
+class EvidenceEntry(BaseModel):
+    """Side-by-side evidence details per document for a finding (Compulsory Key Feature 7)."""
+    doc_id: str
+    doc_name: str           # human-readable, e.g. "doc_1_id_card.png"
+    doc_type: str = "unknown"  # e.g. "id_card"
+    value_raw: str
+    value_norm: str
+    source_text_span: Optional[str] = None   # the raw OCR line
+    source_line_bbox: Optional[List[int]] = None  # for the visualizer highlight
+    source_line_conf: Optional[float] = None
+    ocr_conf: float = 1.0
+    page: int = 1
 
 
 class QualityMetrics(BaseModel):
@@ -91,6 +115,7 @@ class Finding(BaseModel):
     rule_ids: List[str] = Field(default_factory=list)
     suggested_action: str = "Verify manually against original document"
     bboxes: Dict[str, Optional[List[int]]] = Field(default_factory=dict)
+    evidence: List[EvidenceEntry] = Field(default_factory=list)
 
 
 class ConsistentItem(BaseModel):

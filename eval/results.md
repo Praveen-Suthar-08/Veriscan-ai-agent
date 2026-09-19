@@ -1,6 +1,6 @@
 # VeriScan — Empirical Evaluation Benchmark Results
 **National AI Hackathon 2026, Track C (Problem C2: Document & Identity Consistency-Checking Agent)**  
-*Run Timestamp:* 2026-09-19 14:46:30  
+*Run Timestamp:* 2026-09-19 19:02:32  
 *Evaluated on:* Synthetic dataset generated via Faker (`en_IN`) and Pillow; zero real PII.
 
 ---
@@ -13,9 +13,9 @@
 | **Real-Mismatch Recall** | 1.00 | 0.30 | **1.00** | +0.00 |
 | **Real-Mismatch F1 Score** | 0.80 | 0.33 | **1.00** | +0.20 |
 | **Benign Variant False Positive Rate** | 50.0% | 50.0% | **0.0%** | **-50.0%** |
-| **Field Extraction Exact Match** | — | — | **100.0%** | — |
-| **Field Character Error Rate (CER)** | — | — | **0.0%** | — |
-| **Average Case Screening Latency** | — | — | **0.12s** | — |
+| **Field Extraction Exact Match** | — | — | **93.3%** | — |
+| **Field Character Error Rate (CER)** | — | — | **6.7%** | — |
+| **Average Case Screening Latency** | — | — | **0.17s** | — |
 
 > **Key Finding:** While a naive exact-match approach flags benign spelling variants and date formatting as mismatches (50.0% false positive rate), the **VeriScan Full Pipeline** reduces false positives on benign variants down to **0.0%** while maintaining **100.0% recall** on real discrepancies.
 
@@ -27,12 +27,12 @@ Performance reported honestly across different scan conditions and unseen docume
 
 | Dataset Partition | Cases | Extraction Exact Acc | Extraction CER | Mismatch Precision | Mismatch Recall | Mismatch F1 | Benign FPR |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Dev Set (Clean Scans)** | 34 | 100.0% | 0.0% | 1.00 | 1.00 | **1.00** | 0.0% |
-| **Dev Set (Degraded Scans)** | 6 | 100.0% | 0.0% | 0.00 | 0.00 | **0.00** | 0.0% |
-| **Held-Out Layouts Set** | 12 | 97.2% | 1.3% | 1.00 | 1.00 | **1.00** | 0.0% |
+| **Dev Set (Clean Scans)** | 34 | 93.3% | 6.7% | 1.00 | 1.00 | **1.00** | 0.0% |
+| **Dev Set (Degraded Scans)** | 6 | 93.3% | 6.7% | 0.00 | 0.00 | **0.00** | 0.0% |
+| **Held-Out Layouts Set** | 12 | 90.6% | 7.9% | 1.00 | 1.00 | **1.00** | 0.0% |
 
 ### Observations:
-1. **Degraded Scans Handling:** Under synthetic blur, rotation, and Gaussian noise, the progressive retry loop (CLAHE + upscale + unsharp mask) preserves an extraction accuracy of 100.0%. Where confidence remains below 0.60, the gating rule safely tags findings as `LOW_CONFIDENCE` rather than emitting hallucinated mismatches.
+1. **Degraded Scans Handling:** Under synthetic blur, rotation, and Gaussian noise, the progressive retry loop (CLAHE + upscale + unsharp mask) preserves an extraction accuracy of 93.3%. Where confidence remains below 0.60, the gating rule safely tags findings as `LOW_CONFIDENCE` rather than emitting hallucinated mismatches.
 2. **Generalization on Held-Out Layouts:** The held-out layout set (utilizing alternate fonts, spacing, and simulated camera perspective) achieves a **1.00 F1 score**, confirming that VeriScan's fuzzy label-proximity extraction is layout-agnostic and not overfit to fixed template coordinates.
 
 ---

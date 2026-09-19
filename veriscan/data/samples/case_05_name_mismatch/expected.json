@@ -1,0 +1,14 @@
+{
+  "case_id": "case_05_name_mismatch",
+  "expected_triage": "RED",
+  "expected_risk_min": 0.50,
+  "required_mismatch_fields": ["name"],
+  "forbidden_mismatch_fields": ["dob", "id_number", "issue_date"],
+  "required_verdicts": {
+    "name": "MISMATCH"
+  },
+  "required_severities": {
+    "name": "HIGH"
+  },
+  "notes": "Critical candidate first-name discrepancy between ID Card (Tanvi Kohli) and Marksheet (Aarav Kohli)."
+}

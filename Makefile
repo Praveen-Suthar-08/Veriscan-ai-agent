@@ -24,3 +24,7 @@ demo: data
 
 clean:
 	python -c "import shutil, os, glob; [shutil.rmtree(p, ignore_errors=True) for p in glob.glob('**/__pycache__', recursive=True)]"
+
+cache:
+	python veriscan/data/cache_demo_tokens.py
+

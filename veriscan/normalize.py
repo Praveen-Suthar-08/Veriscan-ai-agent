@@ -9,7 +9,7 @@ import re
 import unicodedata
 from typing import Tuple, List, Dict, Optional, Set, Any
 from pathlib import Path
-import yaml
+import yaml  # type: ignore
 
 # Load default config for variants and abbreviations
 _CONFIG_PATH = Path(__file__).parent / "config.yaml"
@@ -17,7 +17,9 @@ _CONFIG: Dict[str, Any] = {}
 if _CONFIG_PATH.exists():
     try:
         with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
-            _CONFIG = yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
+            if isinstance(data, dict):
+                _CONFIG = data
     except Exception:
         _CONFIG = {}
 
