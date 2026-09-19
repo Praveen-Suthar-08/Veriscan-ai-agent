@@ -43,8 +43,7 @@ ENV/
 
 # IDE & Editor
 .idea/
-.vscode/*
-!.vscode/settings.json
+.vscode/
 *.swp
 *.swo
 
